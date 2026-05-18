@@ -18,8 +18,15 @@ install: venv
 	pip install *.whl &&\
 	pip install -e .[dev]
 
+# Create .env from .env.example if not present
+.env:
+	@if [ ! -f .env]; then \
+		cp .env.example .env; \
+		echo "[INFO] .env not found, created from .env.example"; \
+	fi
+
 # Run a_maze_ing in venv
-run:
+run: .env
 	$(ENV) &&\
 	$(PY) $(TARGET) config.json
 
@@ -35,7 +42,7 @@ lint:
 	--warn-return-any --warn-unused-ignores --ignore-missing-imports \
 	--disallow-untyped-defs --check-untyped-defs
 
-debug:
+debug: .env
 	$(ENV) && $(PY) -m pdb $(TARGET) config.json
 
 
@@ -44,6 +51,6 @@ clean:
 	rm -f *.pyc
 	rm -rf .mypy_cache
 	rm -rf *.egg-info
-	find . -type d -name __pycache__ -exe rm -rf {} +
+	find . -type d -name __pycache__ -exec rm -rf {} +
 
 .PHONY: all install run clean venv module lint package debug
