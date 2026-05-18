@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pacman"
+version = "1.0.0"
+description = "The classic Pac-Man game."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "gferrani", email = "gilbert.ferrani@learner.42.tech" },
+    { name = "llafforg", email = "ludovic.lafforgue@learner.42.tech" }
+]
+dependencies = [
+    "pydantic>=2.0.0",
+    "pygame",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.optional-dependencies]
+# Optional Dependencies
+dev = [
+    "flake8>=6.0.0",
+    "mypy>=1.0.0",
+    "pytest",
+    "pyinstaller",
+    "build"
+]
+
+[tool.mypy]
+python_version = "3.10"
+disallow_untyped_defs = true
+check_untyped_defs = true
+warn_return_any = true
+warn_unused_ignores = true
+ignore_missing_imports = true
+plugins = ["pydantic.mypy"]
+
+[tool.flake8]
+exclude = [".git", "__pycache__", ".mypy_cache", "dist", "venv"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
