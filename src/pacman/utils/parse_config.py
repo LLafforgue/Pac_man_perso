@@ -49,14 +49,14 @@ class Configuration(BaseModel):
                                     + "or unexpected key found"
                                     + f"in level {[*level.keys()][0]}"))
 
-        def min_dimention(levels: list) -> int:
+        def min_dimension(levels: list) -> int:
             mult: list = []
             for level in levels:
                 dim = [*level.values()][0]
                 mult.append(dim['width'] * dim['height'])
             return min(mult)
 
-        min_dimensions = min_dimention(self.levels)
+        min_dimensions = min_dimension(self.levels)
         if min_dimensions - 5 < self.nbr_pacgum:
             raise PacmanErrors('config',
                                f'Too many gums (max {min_dimensions})')
@@ -73,7 +73,6 @@ class Configuration(BaseModel):
 def parse_config() -> Configuration:
     """Parse and validate the Pac-Man config file passed as argument."""
     arg = sys.argv[1:]
-    datas: dict = {}
     if len(arg) == 0:
         raise PacmanErrors(
             'arg',

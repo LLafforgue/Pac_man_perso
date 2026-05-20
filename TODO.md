@@ -31,8 +31,12 @@
             - [L] Player
             - [G] Ghost (Strategies)
         - [L] Object/Gum
+
     - [ ] utils/ (constants, errors)
-        - [L] parse_config (`argparse` + `pydantic`)
+        - [x] parse_config (`argparse` + `pydantic`)
+           - inserer `argparse`
+        - [x] pacman_errors
+
     - [ ] assets/ (fonts, sounds, images/sprites)
         - [L] sprites (Pac/Pac_killer; Ghost/G_feared; gum/super_gum)
 - [ ] tests/ (config, scoring, player, ghost, maze, level...)
