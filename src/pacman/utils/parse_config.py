@@ -1,25 +1,24 @@
 import json
 import sys
 from os import path as pth
-from pacman_errors import PacmanErrors
+from .pacman_errors import PacmanErrors
 from pydantic import BaseModel, Field, model_validator
 from typing_extensions import Self
 from typing import Annotated
 
 
-class Configuration(BaseModel):
+class PacManConfig(BaseModel):
     """Configure the pac_man game"""
 
+    cell_size: int = Field(default=32, ge=16, le=128)
     highscores_filename: str = Field(pattern=r"^.+\.json$")
-    levels: list[
-        dict[
+    levels: dict[
             Annotated[str, Field(pattern=r"^\d+$")],
             dict[
                 str,
                 Annotated[int, Field(ge=3, le=100)]
                 ]
                 ]
-            ]
     level_max_time: int = Field(ge=5, le=3600)
     lives: int = Field(ge=1, le=5)
     nbr_pacgum: int = Field(default=42, ge=4)
@@ -38,22 +37,17 @@ class Configuration(BaseModel):
             raise PacmanErrors('Config',
                                f'{self.highscores_filename} is empty.')
 
-        def check_keys(level: dict) -> bool:
-            """"""
-            return [*level.values()][0].keys() == {"width", "height"}
-
-        for level in self.levels:
-            if not check_keys(level):
+        for level, dim in self.levels.items():
+            if dim.keys() != {"width", "height"}:
                 raise PacmanErrors('config',
                                    ("Missing 'width' or 'height' "
                                     + "or unexpected key found"
-                                    + f"in level {[*level.keys()][0]}"))
+                                    + f"in level {level}"))
 
-        def min_dimension(levels: list) -> int:
+        def min_dimension(levels: dict) -> int:
             mult: list = []
-            for level in levels:
-                dim = [*level.values()][0]
-                mult.append(dim['width'] * dim['height'])
+            for level in levels.values():
+                mult.append(level['width'] * level['height'])
             return min(mult)
 
         min_dimensions = min_dimension(self.levels)
@@ -70,7 +64,7 @@ class Configuration(BaseModel):
         return self
 
 
-def parse_config() -> Configuration:
+def parse_config() -> PacManConfig:
     """Parse and validate the Pac-Man config file passed as argument."""
     arg = sys.argv[1:]
     if len(arg) == 0:
@@ -92,7 +86,7 @@ def parse_config() -> Configuration:
     with open(arg[0], 'r') as f:
         datas = json.load(f)
 
-    return Configuration(**datas)
+    return PacManConfig(**datas)
 
 
 if __name__ == "__main__":
@@ -100,5 +94,5 @@ if __name__ == "__main__":
     try:
         test = parse_config()
         print(test.levels)
-    except (Exception, PacmanErrors) as e:
+    except Exception as e:
         print(e)

@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch, mock_open
 from pydantic import ValidationError
-from utils import parse_config, Configuration
+from utils import parse_config, PacManConfig
 
 
 # --- Fixtures ---
@@ -30,28 +30,28 @@ class TestConfiguration:
     @patch("parse_config.pth.getsize", return_value=100)
     @patch("parse_config.pth.isfile", return_value=True)
     def test_valid_config(self, mock_isfile, mock_getsize):
-        config = Configuration(**VALID_CONFIG)
+        config = PacManConfig(**VALID_CONFIG)
         assert config.lives == 3
 
     @patch("parse_config.pth.getsize", return_value=100)
     @patch("parse_config.pth.isfile", return_value=True)
     def test_invalid_highscores_filename(self, mock_isfile, mock_getsize):
         with pytest.raises(ValidationError):
-            Configuration(**make_config(highscores_filename="scores.txt"))
+            PacManConfig(**make_config(highscores_filename="scores.txt"))
 
     @patch("parse_config.pth.getsize", return_value=100)
     @patch("parse_config.pth.isfile", return_value=True)
     def test_lives_out_of_range(self, mock_isfile, mock_getsize):
         with pytest.raises(ValidationError):
-            Configuration(**make_config(lives=0))
+            PacManConfig(**make_config(lives=0))
         with pytest.raises(ValidationError):
-            Configuration(**make_config(lives=6))
+            PacManConfig(**make_config(lives=6))
 
     @patch("parse_config.pth.getsize", return_value=100)
     @patch("parse_config.pth.isfile", return_value=True)
     def test_points_order_not_respected(self, mock_isfile, mock_getsize):
         with pytest.raises(Exception, match="Points order not respected"):
-            Configuration(**make_config(
+            PacManConfig(**make_config(
                 points_per_ghost=10,
                 points_per_superpacgum=100,
                 points_per_pacgum=5
@@ -62,19 +62,19 @@ class TestConfiguration:
     def test_too_many_pacgums(self, mock_isfile, mock_getsize):
         # 10x10 = 100 cases, max pacgum = 95, on en met 96
         with pytest.raises(Exception, match="Too many gums"):
-            Configuration(**make_config(nbr_pacgum=96))
+            PacManConfig(**make_config(nbr_pacgum=96))
 
     @patch("parse_config.pth.getsize", return_value=0)
     @patch("parse_config.pth.isfile", return_value=True)
     def test_empty_highscores_file(self, mock_isfile, mock_getsize):
         with pytest.raises(Exception, match="is empty"):
-            Configuration(**VALID_CONFIG)
+            PacManConfig(**VALID_CONFIG)
 
     @patch("parse_config.pth.getsize", return_value=100)
     @patch("parse_config.pth.isfile", return_value=False)
     def test_highscores_file_not_found(self, mock_isfile, mock_getsize):
         with pytest.raises(Exception, match="No .* available"):
-            Configuration(**VALID_CONFIG)
+            PacManConfig(**VALID_CONFIG)
 
 
 # --- parse_config() ---
@@ -106,5 +106,5 @@ class TestParseConfig:
                 read_data=json.dumps(VALID_CONFIG)
             )):
                 config = parse_config()
-                assert isinstance(config, Configuration)
+                assert isinstance(config, PacManConfig)
                 assert config.lives == 3

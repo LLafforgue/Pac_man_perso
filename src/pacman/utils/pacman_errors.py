@@ -7,6 +7,7 @@ class PacmanErrors(Exception):
         "config": "\033[1;31mConfig_error\033[0m : ",
         "ui": "\033[1;31mUser_error\033[0m : ",
         "arg": "\033[1;31mArgument_error\033[0m : ",
+        "prog": "\033[1;31mProg_error\033[0m : ",
         "unknown": "\033[1;31mUnknown_error\033[0m : ",
     }
 

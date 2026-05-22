@@ -1,11 +1,11 @@
 {
     "highscores_filename": "highscore.json",
-    "levels": [
-        {"0": {"width": 15, "height": 15}},
-        {"1": {"width": 20, "height": 15}},
-        {"2": {"width": 20, "height": 20}},
-        {"3": {"width": 30, "height": 30}}
-    ],
+    "levels": {
+        "0": {"width": 15, "height": 15},
+        "1": {"width": 20, "height": 15},
+        "2": {"width": 20, "height": 20},
+        "3": {"width": 30, "height": 30}
+    },
     "level_max_time": 90,
     "lives": 3,
     "nbr_pacgum": 42,
