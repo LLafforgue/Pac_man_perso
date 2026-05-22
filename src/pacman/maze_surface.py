@@ -150,7 +150,6 @@ if __name__ == "__main__":
         pygame.init()
         curent_level = 0
         maze_surface = maze.generate_surface(0)
-        # DISPLAY_WIDTH, DISPLAY_HEIGHT = maze.make_display_dim()
         display = pygame.display.set_mode(maze.make_display_dim())
         clock = pygame.time.Clock()
         running = True
