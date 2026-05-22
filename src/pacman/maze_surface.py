@@ -51,7 +51,7 @@ class MazeManager:
             dim = self._get_maze_dim_level(lvl)
             maze = mazegenerator.MazeGenerator(
                     size=dim,
-                    seed=config.seed
+                    seed=self.seed
                 )
             self.grids[lvl] = maze._maze
 
@@ -124,8 +124,20 @@ class MazeManager:
         for row, line in enumerate(self.grids[level]):
             for col, value in enumerate(line):
                 self._draw_cell(screen, row, col, value)
-
+        self.screen = screen
         return screen
+
+    def make_display_dim(self, margin: int = 20) -> tuple[int, int]:
+
+        if not hasattr(self, 'screen'):
+            raise PacmanErrors('Prog',
+                               "Generate a surface first !",
+                               "maze_surface.py")
+
+        MARGIN = margin
+        win_w = self.screen.get_width() + MARGIN * 2
+        win_h = self.screen.get_height() + MARGIN * 2
+        return (win_w, win_h)
 
 
 if __name__ == "__main__":
@@ -136,32 +148,47 @@ if __name__ == "__main__":
         maze = MazeManager(cell_size, config.levels, config.seed)
         maze.generate_mazes()
         pygame.init()
-        DISPLAY_WIDTH, DISPLAY_HEIGHT = 800, 600
-        display = pygame.display.set_mode((DISPLAY_WIDTH, DISPLAY_HEIGHT))
+        curent_level = 0
         maze_surface = maze.generate_surface(0)
+        # DISPLAY_WIDTH, DISPLAY_HEIGHT = maze.make_display_dim()
+        display = pygame.display.set_mode(maze.make_display_dim())
         clock = pygame.time.Clock()
         running = True
 
         while running:
+
+            pygame.display.set_caption(f"Maze — niveau {curent_level}")
+
             for event in pygame.event.get():
+
                 if event.type == pygame.QUIT:
                     running = False
+
                 if event.type == pygame.MOUSEBUTTONUP:
-                    level = 0
-                    while not (isinstance(level, str) and level.isdigit()):
-                        level = input('Which level do you want to print ?')
-                        if not level.isdigit():
+                    curent_level = 0
+                    while not (
+                            isinstance(curent_level, str)
+                            and curent_level.isdigit()):
+
+                        curent_level = input(
+                            'Which level do you want to print ?')
+
+                        if not curent_level.isdigit():
                             print("\033[1;35mPlease\033[0m choose a digit")
-                        if not maze.grids.get(level):
+                        if not maze.grids.get(curent_level):
                             print("\033[1;35mOut of range :\033[0m",
                                   '; '.join(
                                       [str(x) for x in range(len(maze.grids))]
                                       ))
-                            level = 0
-                        if isinstance(level, str) and level.isdigit():
-                            maze_surface = maze.generate_surface(level)
+                            curent_level = 0
+                        if (isinstance(curent_level, str)
+                           and curent_level.isdigit()):
+                            maze_surface = maze.generate_surface(curent_level)
+                            display = pygame.display.set_mode(
+                                maze.make_display_dim())
+
             display.fill((0, 0, 0))
-            display.blit(maze_surface, (0, 50))
+            display.blit(maze_surface, (20, 20))
             pygame.display.flip()
             clock.tick(60)
 
