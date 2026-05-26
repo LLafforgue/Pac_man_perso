@@ -1,15 +1,6 @@
 import pygame
-from enum import IntFlag
-from utils import PacmanErrors
+from utils import PacmanErrors, PacManConfig, Wall
 from mazegenerator import mazegenerator
-
-
-class Wall(IntFlag):
-    """Bitmask representing the walls of a single maze cell."""
-    NORD = 1 << 0
-    EST = 1 << 1
-    SUD = 1 << 2
-    OUEST = 1 << 3
 
 
 class MazeManager:
@@ -17,16 +8,12 @@ class MazeManager:
     Handles the generation and rendering of one or more mazes using pygame.
     """
 
-    def __init__(self,
-                 cell_size: int,
-                 levels_config: dict[str, dict],
-                 seed: int
-                 ) -> None:
+    def __init__(self, config: PacManConfig) -> None:
         """Initialize MazeManager instance."""
-        self.levels_config: dict[str, dict] = levels_config
+        self.levels_config: dict[str, dict] = config.levels
         self.grids: dict[str, list[list[int]]] = {}
-        self.seed = seed
-        self.cell_size: int = cell_size
+        self.seed = config.seed
+        self.cell_size: int = config.cell_size
         self.wall_color: tuple[int, int, int] = (0, 0, 255)
         self.bg_color:   tuple[int, int, int] = (0, 0, 0)
 
@@ -168,7 +155,7 @@ class MazeManager:
                 surface, self.wall_color, (x, y), (x, y + s), wall_t
                 )
 
-    def generate_surface(self, level: int | str) -> pygame.Surface:
+    def get_surface(self, level: int | str) -> pygame.Surface:
         """
         Generate and return a ``pygame.Surface`` containing the rendered maze.
 
@@ -190,6 +177,8 @@ class MazeManager:
                 self._draw_cell(screen, row, col, value)
         self.screen = screen
         return screen
+
+    # def set_surface_maze_dimensions() -> None:
 
     def make_display_dim(self, margin: int = 20) -> tuple[int, int]:
         """
@@ -214,55 +203,87 @@ class MazeManager:
 
 
 if __name__ == "__main__":
+
     try:
+        from player import Player
         from utils.parse_config import parse_config
         config = parse_config()
-        cell_size = config.cell_size
-        maze = MazeManager(cell_size, config.levels, config.seed)
-        maze.generate_mazes()
         pygame.init()
+
         curent_level = 0
-        maze_surface = maze.generate_surface(0)
-        display = pygame.display.set_mode(maze.make_display_dim())
+
+        maze = MazeManager(config)
+        maze.generate_mazes()
+        maze_surface = maze.get_surface(0)
+
+        player = Player(
+            config=config,
+            mazes=maze.grids
+        )
+
+        player.generate_surfaces(2)
+        player.reset(curent_level)
+        player_surface = player.get_surface()
+        frame_index = 0
+        display = pygame.display.set_mode(
+            maze.make_display_dim(), pygame.RESIZABLE)
+
         clock = pygame.time.Clock()
         running = True
-
+        time = 0
+        dt = 60
         while running:
 
             pygame.display.set_caption(f"Maze — niveau {curent_level}")
+
+            time += dt
+            if time >= player.SPEED:
+                frame_index = (frame_index + 1) % len(player_surface)
+                time = 0
 
             for event in pygame.event.get():
 
                 if event.type == pygame.QUIT:
                     running = False
+                if event.type == pygame.KEYDOWN:
+                    if (event.key in (pygame.K_UP, pygame.K_w)
+                            or event.key in (pygame.K_DOWN, pygame.K_s)
+                            or event.key in (pygame.K_LEFT, pygame.K_a)
+                            or event.key in (pygame.K_RIGHT, pygame.K_d)):
+                        player.move(level=curent_level, key=event.key)
+                        player_surface = player.get_surface()
+                    if event.key == pygame.K_SPACE:
+                        curent_level = 0
+                        while not (
+                                isinstance(curent_level, str)
+                                and curent_level.isdigit()):
 
-                if event.type == pygame.MOUSEBUTTONUP:
-                    curent_level = 0
-                    while not (
-                            isinstance(curent_level, str)
-                            and curent_level.isdigit()):
+                            curent_level = input(
+                                'Which level do you want to print ?')
 
-                        curent_level = input(
-                            'Which level do you want to print ?')
-
-                        if not curent_level.isdigit():
-                            print("\033[1;35mPlease\033[0m choose a digit")
-                        if not maze.grids.get(curent_level):
-                            print("\033[1;35mOut of range :\033[0m",
-                                  '; '.join(
-                                      [str(x) for x in range(len(maze.grids))]
-                                      ))
-                            curent_level = 0
-                        if (isinstance(curent_level, str)
-                           and curent_level.isdigit()):
-                            maze_surface = maze.generate_surface(curent_level)
-                            display = pygame.display.set_mode(
-                                maze.make_display_dim())
+                            if not curent_level.isdigit():
+                                print("\033[1;35mPlease\033[0m choose a digit")
+                            if not maze.grids.get(curent_level):
+                                print("\033[1;35mOut of range :\033[0m",
+                                      '; '.join(
+                                        [str(x)
+                                         for x in range(len(maze.grids))]
+                                        ))
+                                curent_level = 0
+                            if (isinstance(curent_level, str)
+                               and curent_level.isdigit()):
+                                maze_surface = maze.get_surface(
+                                    curent_level)
+                                display = pygame.display.set_mode(
+                                    maze.make_display_dim(), pygame.RESIZABLE)
+                                player.reset(curent_level)
 
             display.fill((0, 0, 0))
             display.blit(maze_surface, (20, 20))
+            display.blit(player_surface[frame_index],
+                         player.coord_to_position())
             pygame.display.flip()
-            clock.tick(60)
+            clock.tick(dt)
 
     except Exception as e:
         print(e)
